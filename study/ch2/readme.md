@@ -86,3 +86,13 @@
         ```
     - `libc` is always linked by default to programs but the others have to be explicitly linked with the -l option (excluding the "lib" part of the name, like so: -lm to link libm)
     - To check which libraries have been linked in a target file, do: `$ arm-cortex_a8-linux-gnueabihf-readelf -a myprog | grep "Shared library"`
+
+### Automating the usage of the toolchain
+- Script to activate cross-environment:
+    ```bash
+    PATH=${HOME}/x-tools/arm-cortex_a8-linux-gnueabihf/bin/:$PATH
+    export CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf-
+    export ARCH=arm
+    ```
+
+    - `CROSS_COMPILE` is a makefile variable
