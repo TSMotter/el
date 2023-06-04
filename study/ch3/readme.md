@@ -55,6 +55,8 @@
 
 - The `mkimage` command line tool:
     - Utility provided by U-Boot that enables the creation of bootable images in a format that U-Boot can understand.
+        - Compilation: `ggm@ggm-nitro5:~/Documents/tsmotter/embedded-linux/u-boot ((v2021.01))$ make tools
+`
     - These bootable images can be:
         - the U-Boot bootloader itself
         - device tree files
