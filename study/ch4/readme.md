@@ -1,5 +1,11 @@
 # 4: Learning about the kernel
 
+- `mmake.py`
+    - python tool created to issue a desktop notification whenever a make command finishes
+    - The desire to build this tool was born after a time that I issued a make command to build the kernel and "Alt + Tabed" back to read the book. The command was finished a long time ago once I actually went back to the command prompt.
+    - To use `mmake` do it like this:
+        - `ggm@ggm-nitro5:~/Documents/tsmotter/embedded-linux/linux-6.1.31$ mmake make -j12 zImage`
+
 - Busy-box
     - BusyBox is a software package that provides a collection of commonly used Unix utilities in a single executable file. It is designed to be small and lightweight, making it well-suited for embedded systems or resource-constrained environments.
 
@@ -22,23 +28,36 @@
         - **APK:** Android uses the Google Play Store as the primary distribution platform for APK files. Users can also install APK files directly on their devices from third-party sources.
         - **DEB:** Debian-based Linux distributions use package managers like APT (Advanced Package Tool) to handle software installation, updates, and dependency resolution. DEB files are typically downloaded and installed through package managers or software centers.
 
-- menuconfig
-    - Configuration utility to go from kconfig files into .config file using an iteractive menu
-    - `ggm@ggm-nitro5:~/Documents/tsmotter/embedded-linux/linux-5.4.50$ make ARCH=arm menuconfig`
-    - There are other options (make targets) to deal with kernel configuration
+- *KConfig* files "defines" all the possible configurations, their types, dependencies, default values.
+    - An example entry of a *KConfig* file is:
         ```bash
-        ggm@ggm-nitro5:~/Documents/tsmotter/embedded-linux/linux-5.4.50$ make help
-        .
-        .
-        .
-        Configuration targets:
-        config	  - Update current config utilising a line-oriented program
-        nconfig         - Update current config utilising a ncurses menu based program
-        menuconfig	  - Update current config utilising a menu based program
-        xconfig	  - Update current config utilising a Qt based front-end
-        gconfig	  - Update current config utilising a GTK+ based front-end
-        oldconfig	  - Update current config utilising a provided .config as base
+        config DEVMEM
+        bool "/dev/mem virtual device support"
+        default y
+        help
+        Say Y here if you want to support the /dev/mem device.
+        The /dev/mem device is used to access areas of physical
+        memory.
+        When in doubt, say "Y".
         ```
+
+- *defconfig* files are a colletion of some "*KConfig* defined configurations" specific for a certain board
+    - *defconfigs* will normally specify only configurations that differ from what is default
+    - *defconfigs* is normally a smaller file (couple of hundreds of lines)
+    - An example of a *defconfig* entry is:
+        - `CONFIG_DEVMEM=y`
+
+- In order to compile a kernel image (with a command such as `make zImage` or `make uImage`) you need a *.config* file present in the root directory of your kernel source
+
+- The *.config* file contains all the possible "*KConfig* defined configurations" specific to the current kernel version being used
+    - The kernel buildsystem will look at whatever is present on this file to decide what to build/not to build and HOW to build it (kernel module? dynamic link? static link?)
+    - An example of a *.config* entry is just like the one in a *defconfig* file:
+        - `CONFIG_DEVMEM=y`
+    - *menuconfig* is a tool that allows to graphically (through a menu-like GUI) edit all the possible "*KConfig* defined configurations"
+        - To launch *menuconfig*: `ggm@ggm-nitro5:~/Documents/tsmotter/embedded-linux/linux-5.4.50$ make ARCH=arm menuconfig`
+        - Once you exit *menuconfig* and save, a *.config* file will be created that represents the complete configuration of your kernel build
+    - Another option to generate a *.config* file is to use make on one *defconfig* files, like this:
+        - `make ARCH=arm multi_v7_defconfig`
 
 ## Compiling the kernel
 
