@@ -4,7 +4,7 @@ import subprocess
 import time
 import shlex
 
-def execute_make_command(command):
+def execute_command(command):
     start_time = time.time()
     process = subprocess.Popen(command, shell=True, stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
     process.wait()
@@ -17,9 +17,9 @@ def send_notification(message):
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) > 2 and sys.argv[1] == "make":
-        make_command = " ".join(sys.argv[1:])
-        execution_time = execute_make_command(shlex.split(make_command))
-        send_notification(f"Make command '{make_command}' finished.\nExecution time: {execution_time:.2f} seconds.")
+    if len(sys.argv) > 2:
+        command = " ".join(sys.argv[1:])
+        execution_time = execute_command(shlex.split(command))
+        send_notification(f"Command '{command}' finished.\nExecution time: {execution_time:.2f} seconds.")
     else:
         print("Invalid command. Usage: doitforme make <make_command>")
