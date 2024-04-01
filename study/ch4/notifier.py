@@ -22,4 +22,4 @@ if __name__ == '__main__':
         execution_time = execute_command(shlex.split(command))
         send_notification(f"Command '{command}' finished.\nExecution time: {execution_time:.2f} seconds.")
     else:
-        print("Invalid command. Usage: doitforme make <make_command>")
+        print("Invalid command. Usage: notifier make <make_command>")
