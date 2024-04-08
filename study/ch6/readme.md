@@ -131,7 +131,240 @@ lrwxrwxrwx  1 ggm ggm   11 fev 26 20:44 raspberrypizero2w -> raspberrypi
     - Ex: `ERROR: Dependency "mount" not found`
 
 ## Yocto
-- 
+- Not only can build toolchain, bootloader, kernel and rootfs, but a "complete linux distribution", with binary packages that can be installed at runtime
+
+- Characteristics of the build system:
+
+    - Structured around recipes (a combination of Python and shell script)
+
+    - One of the main pillars is the task scheduler: BitBake
+
+### History
+- In 2003 OpenEmbedded (OE) comes to life as a build system for handheld computers, able to create binary packages and combine them in different ways based on the metadata provided in a very versatile waty
+
+- In 2005 Poky was created by OpenHand as a fork of OpenEmbedded but with a more conservative choice of packages and with releases stable over a period of time
+
+- In 2008 Intel bought OpenHand
+
+- In 2010 Intel transferred Poky to the Linux Foundation and created the Yocto Project
+
+- Since 2010, the common parts of the OpenEmbedded and Poky have been combined into a project known as OpenEmbedded Core (OE-Core)
+
+- Main components of the Yocto Project:
+
+    - OE-Core: Core metadata (shared with OpenEmbedded)
+
+    - BitBake: Task scheduler (shared with OpenEmbedded and other projects)
+
+    - Poky: Reference distribution
+
+### Stable Releases
+- Usually every 6 months there is a new release
+
+- Each release has it's code name
+
+- Each release is supported for 12 months
+
+- TLS releases is supported for 2 years
+
+
+### Working with Yocto
+- Clone it
 
 ```bash
+ggm@gAN515-52:~/embedded-linux/ch6 $ git clone -b dunfell git://git.yoctoproject.org/poky.git
 ```
+
+- Initialize the environment by sourcing the script (should be done every time that will work)
+
+    - This will create the working directory (by default: `build`)
+
+    - This directory is where intermediate and final target files will be placed, as well as configurations about the build
+
+```bash
+ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ source oe-init-build-env
+```
+
+- One very important sub directory is `build/conf`, which will contain build configuration files
+
+    - `local.conf`: Specification of the device you are building for and build environment
+
+    - `bblayers.conf`: paths to the meta layers
+
+- Set the MACHINE variable in `build/conf/local.conf` by uncommenting
+
+- In order to build an image, need to tell bitbake what to build
+
+    - bitbake accepts as parameter a task and a recipe or a target
+
+    - bitbake will execute the specified task for the given set of target / recipes
+
+    - The default task is "build" (do_build)
+
+    - It is possible to list the tasks for a specific target
+
+        - Example: `bitbake -c listtasks core-image-minimal`
+
+    - `listtasks` itself is a task
+
+    - `core-image-minimal` is a recipe (target) (`poky/meta/recipes-core/images/core-image-minimal.bb`)
+
+    - Example of other tasks:
+
+        - do_build, do_clean, do_cleanall, do_compile, do_configure, do_install, do_package, do_populate_sdk, do_rootfs
+
+### Layers
+- Yocto metadata is structured into layers
+
+- Each layer starts wih "meta-" in the name
+
+- The main layers are:
+
+    - meta: OpenEmbedded core
+
+    - meta-poky: Metadata specific for the poky distribution
+
+    - meta-yocto-bsp: Contains the board support package for the devices (MACHINEs) supported by Yocto
+
+- Layers are shared as repositories containing related sets of instructions which tell the build system what to do
+
+- Layer have an override capability (which is what allows you to customize previous collaborative or community supplied layers to suit your product requirements)
+
+- As an example, you could have a BSP layer, a GUI layer, a distro configuration, middleware, or an application
+
+- Use BSP layers from silicon vendors when possible
+
+- The list of layers which bitbake will search for recipes is stored in `<your build directory>/conf/bblayers.conf`
+
+    - Example: `poky/build/conf/bblayers.conf`
+
+- A list of layers can be searched in the layers index
+
+    - http://layers.openembedded.org/layerindex/
+
+- Adding a layer is as simple as adding the **meta-** directory to a suitable location and editing the bblayers.conf file
+
+    - When adding a new layer, take care with the dependencies that the new layer have as well as the compatibility with the Yocto version
+
+### Creating a layer
+
+```bash
+ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ source oe-init-build-env build-nova
+#...
+ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ bitbake-layers create-layer nova
+NOTE: Starting bitbake server...
+Add your new layer with 'bitbake-layers add-layer nova'
+ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ bitbake-layers add-layer nova
+NOTE: Starting bitbake server...
+ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ cat conf/bblayers.conf | grep nova
+  /home/ggm/embedded-linux/ch6/poky/build-nova/nova \
+ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ bitbake-layers remove-layer nova
+NOTE: Starting bitbake server...
+ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ bitbake-layers add-layer ../meta-nova
+NOTE: Starting bitbake server...
+ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ cat conf/bblayers.conf | grep nova
+  /home/ggm/embedded-linux/ch6/poky/meta-nova \
+```
+
+### Recipes
+- Recipes are one amongst many other types of metadata that bitbake processes:
+
+    - Recipes:
+
+        - File ending in ".bb"
+
+        - Contains information about building a unit of SW, including how to get the source code, dependencies, how to build and install it
+
+    - Append:
+
+        - File ending in ".bbappend"
+
+        - Allow some detail of a recipe to be overwritten or extended
+
+        - It'll simply append it's instructions to the end of the corresponding ".bb" file
+
+    - Include:
+
+        - File ending in ".inc"
+
+        - Contains information that is common to multiple recipes (allow information to be shared)
+
+        - These files may be included using `include` (does NOT produce an error if file does NOT exists) or `require` (produces an error if file does NOT exists) keyword
+
+    - Classes:
+
+        - File ending in ".bbclass"
+
+        - Contains common build information, example: how to build a kernel or autotools
+
+        - Classes are inherited and extended in other classes and recipes using the `inherit` keyword
+
+        - The `classes/base.bbclass` class is implicitly inherited in every recipe
+
+    - Configuration:
+
+        - File ending in ".conf"
+
+        - Contains configurations that control the build process
+
+- Recipes are a collection of tasks
+
+- Written in a combination of Python and shell 
+
+- bitbake is used to execute such tasks 
+
+- The book goes over the creation of a custom recipee for building and installing a helloworld program into the final image. The recipe is created in the meta-nova layer
+
+- The list of packages to be installed is held in a variable named `IMAGE_INSTALL`
+
+- It is possible to add packages via the use of the variable `IMAGE_INSTALL_append`
+
+    - For example, it's possible to add `IMAGE_INSTALL_append = " helloworld"` to the end of the `conf/local.conf`
+
+    - If you look at `tmp/deploy/images/beaglebone-yocto/core-image-minimal-beaglebone-yocto.tar.bz2` you'll see `/usr/bin/helloworld` binary
+
+- There is another varible that allow for more customization of the final image, taht is the `EXTRA_IMAGE_FEATURES`
+
+    - Some example of available options are: X server, read-only fs, debug symbols for packages, allow root login without passwords, etc
+
+### Image Recipe
+- Editing local.conf to change the image configuration is an option but falls short when you want to share the work with others, etc
+
+- This is when image recipes come in hand
+
+- An image recipe will contain information about how to create an image for the given target, including information about bootloader, kernel, rootfs, etc
+
+- By default image recipes are put in the `images` directory 
+
+    - Example: `poky/meta/recipes-core/images/core-image-minimal.bb`
+
+    - To get a full list: `ls meta*/recipes*/images/*.bb`
+
+- Example creating an image recipe that is based on `core-image-minimal.bb` (includes it via the `require` keyword) and extend the packages installed
+
+```bash
+ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ cat meta-nova/recipes-local/images/nova-image.bb 
+require recipes-core/images/core-image-minimal.bb
+IMAGE_INSTALL += "helloworld strace"
+ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ bitbake nova-image
+```
+
+### Creating an SDK
+- The following command will generate a stand alone installable SDK, which can be shared between people
+```bash
+ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ bitbake -c populate_sdk nova-image
+```
+
+- The result is a self-installing bash scrip
+
+```bash
+ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ poky-glibc-x86_64-nova-image-cortexa8hf-neon-beaglebone-yocto-toolchain-3.1.5.sh
+```
+
+- Alternativelly, if you just want a simple toolchain with just C/C++ cross-compiler, you can use the following recipe: `poky/meta/recipes-core/meta/meta-toolchain.bb`
+
+    - `bitbake meta-toolchain`
+
+- You'll be able to compile and work stand alone like this:
+
+    - `$CC -O helloworld.c -o helloworld`
