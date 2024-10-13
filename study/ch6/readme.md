@@ -79,9 +79,9 @@ ggm@gAN515-52:~/embedded-linux/ch6/buildroot/ ((HEAD detached at 2023.02.9))$ ma
     - `output/build/`: Here, you will find the build directory for each component.
 
     - `output/host/`: This contains various tools required by Buildroot that run on the host, including the executables of the toolchain (in output/host/usr/bin).
-    
+
     - `output/images/`: This is the most important of all since it contains the results of the build. Depending on what you selected when configuring, you will find a bootloader, a kernel, and one or more root filesystem images.
-    
+
     - `output/staging/`: This is a symbolic link to sysroot of the toolchain.
 
     - `output/target/`: This is the staging area for the root directory. Note that you cannot use it as a root filesystem as it stands because the file ownership and the permissions are not set correctly. Buildroot uses a device table, as described in the previous chapter, to set ownership and permissions when the filesystem image is created in the image/ directory.
@@ -249,21 +249,42 @@ ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ source oe-init-build-env
 ### Creating a layer
 
 ```bash
-ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ source oe-init-build-env build-nova
-#...
-ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ bitbake-layers create-layer nova
+ggm@ubuntu2004:~/embedded-linux/poky (dunfell)$ bitbake-layers create-layer meta-tsmotter
 NOTE: Starting bitbake server...
-Add your new layer with 'bitbake-layers add-layer nova'
-ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ bitbake-layers add-layer nova
+Add your new layer with 'bitbake-layers add-layer meta-tsmotter'
+ggm@ubuntu2004:~/embedded-linux/poky (dunfell)$ cd build/
+ggm@ubuntu2004:~/embedded-linux/poky/build (dunfell)$ bitbake-layers add-layer ../meta-tsmotter
 NOTE: Starting bitbake server...
-ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ cat conf/bblayers.conf | grep nova
-  /home/ggm/embedded-linux/ch6/poky/build-nova/nova \
-ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ bitbake-layers remove-layer nova
-NOTE: Starting bitbake server...
-ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ bitbake-layers add-layer ../meta-nova
-NOTE: Starting bitbake server...
-ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ cat conf/bblayers.conf | grep nova
-  /home/ggm/embedded-linux/ch6/poky/meta-nova \
+ggm@ubuntu2004:~/embedded-linux/poky/build (dunfell)$ cat conf/bblayers.conf | grep tsm
+  /home/ggm/embedded-linux/poky/meta-tsmotter \
+```
+
+## Getting information about a yocto variable
+- Example inspecting what is the value of the variable `IMAGE_ROOTFS` for the target `core-image-minimal`
+```bash
+ggm@ubuntu2004:~/embedded-linux/poky/build (dunfell)$ bitbake-getvar -r core-image-minimal IMAGE_ROOTFS
+#
+# $IMAGE_ROOTFS [2 operations]
+#   set /home/ggm/embedded-linux/poky/meta/conf/bitbake.conf:456
+#     "${WORKDIR}/rootfs"
+#   set /home/ggm/embedded-linux/poky/meta/conf/documentation.conf:222
+#     [doc] "The location of the root filesystem while it is under construction (i.e. during do_rootfs)."
+# pre-expansion value:
+#   "${WORKDIR}/rootfs"
+IMAGE_ROOTFS="/home/ggm/embedded-linux/poky/build/tmp/work/beaglebone_yocto-poky-linux-gnueabi/core-image-minimal/1.0-r0/rootfs"
+```
+- Less verbose:
+```bash
+ggm@ubuntu2004:~/embedded-linux/poky/build (dunfell)$ bitbake-getvar -r core-image-minimal --value IMAGE_ROOTFS
+/home/ggm/embedded-linux/poky/build/tmp/work/beaglebone_yocto-poky-linux-gnueabi/core-image-minimal/1.0-r0/rootfs
+```
+
+- Other examples
+```bash
+ggm@ubuntu2004:~/embedded-linux/poky/build (dunfell)$ bitbake-getvar -r software-timer --value S
+/home/ggm/embedded-linux/poky/build/tmp/work/cortexa8hf-neon-poky-linux-gnueabi/software-timer/0.1+gitAUTOINC+5d8327406d-r0/git
+ggm@ubuntu2004:~/embedded-linux/poky/build (dunfell)$ bitbake-getvar -r software-timer --value B
+/home/ggm/embedded-linux/poky/build/tmp/work/cortexa8hf-neon-poky-linux-gnueabi/software-timer/0.1+gitAUTOINC+5d8327406d-r0/build
 ```
 
 ### Recipes
@@ -309,11 +330,11 @@ ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ cat conf/bblayers.
 
 - Recipes are a collection of tasks
 
-- Written in a combination of Python and shell 
+- Written in a combination of Python and shell
 
-- bitbake is used to execute such tasks 
+- bitbake is used to execute such tasks
 
-- The book goes over the creation of a custom recipee for building and installing a helloworld program into the final image. The recipe is created in the meta-nova layer
+- The book goes over the creation of a custom recipe for building and installing a helloworld program into the final image. The recipe is created in the meta-nova layer
 
 - The list of packages to be installed is held in a variable named `IMAGE_INSTALL`
 
@@ -323,7 +344,7 @@ ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ cat conf/bblayers.
 
     - If you look at `tmp/deploy/images/beaglebone-yocto/core-image-minimal-beaglebone-yocto.tar.bz2` you'll see `/usr/bin/helloworld` binary
 
-- There is another varible that allow for more customization of the final image, taht is the `EXTRA_IMAGE_FEATURES`
+- There is another varible that allow for more customization of the final image, that is the `EXTRA_IMAGE_FEATURES`
 
     - Some example of available options are: X server, read-only fs, debug symbols for packages, allow root login without passwords, etc
 
@@ -334,7 +355,7 @@ ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ cat conf/bblayers.
 
 - An image recipe will contain information about how to create an image for the given target, including information about bootloader, kernel, rootfs, etc
 
-- By default image recipes are put in the `images` directory 
+- By default image recipes are put in the `images` directory
 
     - Example: `poky/meta/recipes-core/images/core-image-minimal.bb`
 
@@ -343,7 +364,7 @@ ggm@gAN515-52:~/embedded-linux/ch6/poky/build-nova (dunfell)$ cat conf/bblayers.
 - Example creating an image recipe that is based on `core-image-minimal.bb` (includes it via the `require` keyword) and extend the packages installed
 
 ```bash
-ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ cat meta-nova/recipes-local/images/nova-image.bb 
+ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ cat meta-nova/recipes-local/images/nova-image.bb
 require recipes-core/images/core-image-minimal.bb
 IMAGE_INSTALL += "helloworld strace"
 ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ bitbake nova-image
