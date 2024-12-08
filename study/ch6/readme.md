@@ -370,6 +370,17 @@ IMAGE_INSTALL += "helloworld strace"
 ggm@gAN515-52:~/embedded-linux/ch6/poky (dunfell)$ bitbake nova-image
 ```
 
+- Example bitbaking an image recipe and checking the produced image:
+```bash
+ggm@ubuntu2004:~/embedded-linux/sublime-platform/build(master)$ bitbake motter-image-minimal
+ggm@ubuntu2004:~/embedded-linux/sublime-platform/build(master)$ ll tmp-glibc/deploy/images/dogbonedark/ | grep wic
+-rw-r--r-- 2 ggm ggm 130861568 nov 12 09:24 motter-image-minimal-dogbonedark-20241112122339.rootfs.wic
+-rw-r--r-- 2 ggm ggm      3057 nov 12 09:24 motter-image-minimal-dogbonedark-20241112122339.rootfs.wic.bmap
+lrwxrwxrwx 2 ggm ggm        58 nov 12 09:24 motter-image-minimal-dogbonedark.wic -> motter-image-minimal-dogbonedark-20241112122339.rootfs.wic
+lrwxrwxrwx 2 ggm ggm        63 nov 12 09:24 motter-image-minimal-dogbonedark.wic.bmap -> motter-image-minimal-dogbonedark-20241112122339.rootfs.wic.bmap
+ggm@ubuntu2004:~/embedded-linux/sublime-platform/build(master)$ cp tmp-glibc/deploy/images/dogbonedark/motter-image-minimal-dogbonedark.wic /media/sf_shared/
+```
+
 ### Creating an SDK
 - The following command will generate a stand alone installable SDK, which can be shared between people
 ```bash

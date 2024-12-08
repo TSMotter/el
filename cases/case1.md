@@ -1,6 +1,11 @@
 # Case 1
 - `ERROR: do_package_qa: QA Issue: package <packagename> contains bad RPATH <rpath> in file <file> [rpaths]`
 
+## References
+- https://docs.yoctoproject.org/3.1.5/ref-manual/ref-qa-checks.html#errors-and-warnings
+- https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
+- https://stackoverflow.com/a/45843676
+
 ## Description, development, solution
 - Initiative:
     - build and install a proprietary shared library (.so) file
@@ -259,4 +264,27 @@ tmp-glibc/work/armv7at2hf-neon-oe-linux-gnueabi/software-timer/from-gitAUTOINC+a
 ggm@ubuntu2004:~/embedded-linux/sublime-platform/build(master)$ objdump -x tmp-glibc/work/armv7at2hf-neon-oe-linux-gnueabi/software-timer/from-gitAUTOINC+a6ab5d489f-r0/packages-split/software-timer/bin/main | grep PATH
 ggm@ubuntu2004:~/embedded-linux/sublime-platform/build(master)$ echo $?
 1
+```
+
+### Tests on the target
+- It is possible to see that the both: the application and the shared library are present on the rootfs and that they can be executed
+```bash
+root@dogbonedark:~# which main
+/bin/main
+root@dogbonedark:~# ls /lib/libgm_timer.so.0
+/lib/libgm_timer.so.0
+root@dogbonedark:~# main
+
+ Hello, this is Timer1 Callback!
+
+ Hello, this is Timer1 Callback!
+
+ Hello, this is Timer1 Callback!
+
+ Hello, this is Timer1 Callback!
+
+ Hello, this is Timer2 Callback!
+
+ Hello, this is Timer1 Callback!
+^C
 ```
